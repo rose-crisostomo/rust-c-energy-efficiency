@@ -1,0 +1,15 @@
+using sysbus
+
+mach create "stm32_c"
+
+machine LoadPlatformDescription @platforms/boards/stm32f4_discovery.repl
+
+sysbus LoadELF "C:\Users\crsst\Documents\Dev\rust-c-energy-efficiency\c_code\build\intermittent_c.elf"
+
+showAnalyzer sysbus.usart2
+
+sysbus.usart2 AddLineHook "Test completed" "instrs = list(machine.SystemBus.GetCPUs())[0].ExecutedInstructions; vt_us = int(machine.ElapsedVirtualTime.TimeElapsed.Ticks); self.Log(LogLevel.Info, 'METRICS instructions=' + str(instrs) + ' virtual_us=' + str(vt_us)); machine.Pause()"
+
+echo "=== TEST START ==="
+
+start
