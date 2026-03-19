@@ -1,0 +1,1 @@
+[] convert resc to python https://renode.readthedocs.io/en/latest/basic/using-python.html

@@ -55,7 +55,7 @@ def run_simulation(script: str, label: str) -> dict[str, int]:
                         "instructions": int(m.group(1)),
                         "virtual_us":   int(m.group(2)),
                     }
-                if "Machine paused" in line:
+                if metrics is not None:
                     completed = True
                     break
         finally:

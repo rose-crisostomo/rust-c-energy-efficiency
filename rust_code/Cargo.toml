@@ -9,4 +9,3 @@ cortex-m-rt = "0.7"
 
 [profile.release]
 opt-level = 2
-lto = true

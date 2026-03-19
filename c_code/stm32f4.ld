@@ -53,6 +53,14 @@ SECTIONS
     _ebss = .;
   } > RAM
 
+  .noinit (NOLOAD) :
+  {
+    . = ALIGN(4);
+    *(.noinit)
+    *(.noinit*)
+    . = ALIGN(4);
+  } > RAM
+
   . = ALIGN(4);
   end = .;
 }

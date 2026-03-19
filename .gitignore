@@ -4,6 +4,5 @@
 target/
 build/
 *.csv
-results/*.json
 .DS_Store
 .vscode/

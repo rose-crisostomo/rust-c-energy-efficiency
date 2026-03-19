@@ -2,6 +2,7 @@
 #![no_main]
 
 use core::mem;
+use core::mem::MaybeUninit;
 use core::panic::PanicInfo;
 use core::ptr::{addr_of, addr_of_mut};
 use cortex_m_rt::entry;
@@ -19,11 +20,19 @@ const USART2_CR1: *mut u32 = (USART2_BASE + 0x0C) as *mut u32;
 
 // simulated NVM for state checkpointing
 const NVM_SIZE: usize = 256;
-static mut NVM_BUFFER: [u8; NVM_SIZE] = [0; NVM_SIZE];
+const CHECKPOINT_MAGIC: u32 = 0x4350_4B54;
+#[link_section = ".uninit.NVM_BUFFER"]
+static mut NVM_BUFFER: MaybeUninit<[u8; NVM_SIZE]> = MaybeUninit::uninit();
 
 #[derive(Clone, Copy)]
 struct AppState {
     computation_result: u32
+}
+
+#[derive(Clone, Copy)]
+struct NvmCheckpoint {
+    magic: u32,
+    computation_result: u32,
 }
 
 static mut STATE: AppState = AppState {
@@ -56,14 +65,47 @@ fn uart_write(s: &str) {
 // need the instruction count to be comparable to C version
 fn checkpoint_state() {
     unsafe {
-        let state_size = mem::size_of::<AppState>();
-        let state_bytes = core::slice::from_raw_parts(
-            addr_of!(STATE) as *const u8,
-            state_size,
+        let checkpoint = NvmCheckpoint {
+            magic: CHECKPOINT_MAGIC,
+            computation_result: core::ptr::read_volatile(addr_of!(STATE.computation_result)),
+        };
+        let checkpoint_size = mem::size_of::<NvmCheckpoint>();
+        let checkpoint_bytes = core::slice::from_raw_parts(
+            addr_of!(checkpoint) as *const u8,
+            checkpoint_size,
         );
-        for i in 0..state_size {
-            core::ptr::write_volatile((addr_of_mut!(NVM_BUFFER) as *mut u8).add(i), state_bytes[i]);
+        for i in 0..checkpoint_size {
+            let nvm_ptr = (*addr_of_mut!(NVM_BUFFER)).as_mut_ptr() as *mut u8;
+            core::ptr::write_volatile(nvm_ptr.add(i), checkpoint_bytes[i]);
         }
+    }
+}
+
+fn restore_state() -> bool {
+    unsafe {
+
+        let mut checkpoint = NvmCheckpoint {
+            magic: 0,
+            computation_result: 0,
+        };
+        let checkpoint_size = mem::size_of::<NvmCheckpoint>();
+        let checkpoint_bytes = core::slice::from_raw_parts_mut(
+            addr_of_mut!(checkpoint) as *mut u8,
+            checkpoint_size,
+        );
+
+        for i in 0..checkpoint_size {
+            let nvm_ptr = (*addr_of!(NVM_BUFFER)).as_ptr() as *const u8;
+            checkpoint_bytes[i] = core::ptr::read_volatile(nvm_ptr.add(i));
+        }
+
+        if checkpoint.magic != CHECKPOINT_MAGIC {
+            core::ptr::write_volatile(addr_of_mut!(STATE.computation_result), 0);
+            return false;
+        }
+
+        core::ptr::write_volatile(addr_of_mut!(STATE.computation_result), checkpoint.computation_result);
+        true
     }
 }
 
@@ -78,7 +120,13 @@ fn compute_task(input: u32) -> u32 {
 #[entry]
 fn main() -> ! {
     uart_init();
-    uart_write("Rust: Intermittent Computing Test Started\n");
+    uart_write("Intermittent Computing Test Started\n");
+
+    if restore_state() {
+        uart_write("Restored checkpoint\n");
+    } else {
+        uart_write("No checkpoint found\n");
+    }
 
     for cycle in 0..100u32 {
         unsafe {
@@ -86,13 +134,14 @@ fn main() -> ! {
             core::ptr::write_volatile(addr_of_mut!(STATE.computation_result), result);
 
             if cycle % 10 == 0 {
+                uart_write("Starting checkpoint...\n");
                 checkpoint_state();
-                uart_write("Rust: Checkpoint saved\n");
+                uart_write("Checkpoint saved\n");
             }
         }
     }
 
-    uart_write("Rust: Test completed\n");
+    uart_write("Test completed\n");
 
     loop {}
 }

@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdbool.h>
 
 // Reset and Clock Control (RCC) and USART2 base addresses
 #define RCC_BASE       0x40023800u
@@ -13,11 +14,24 @@
 
 // simulated NVM for state checkpointing
 #define NVM_SIZE 256
-static uint8_t nvm_buffer[NVM_SIZE];
+#define CHECKPOINT_MAGIC 0x43504B54u
+
+#if defined(__GNUC__) || defined(__clang__)
+#define NOINIT_SECTION __attribute__((section(".noinit")))
+#else
+#define NOINIT_SECTION
+#endif
+
+static uint8_t nvm_buffer[NVM_SIZE] NOINIT_SECTION;
 
 typedef struct {
     uint32_t computation_result;
 } AppState;
+
+typedef struct {
+    uint32_t magic;
+    uint32_t computation_result;
+} NvmCheckpoint;
 
 static AppState state = {0};
 
@@ -40,17 +54,32 @@ void uart_write(const char *str) {
 }
 
 void checkpoint_state(void) {
-    const uint8_t *src = (const uint8_t *)&state;
-    for(uint32_t i = 0; i < (uint32_t)sizeof(AppState); i++) {
+    const NvmCheckpoint checkpoint = {
+        .magic = CHECKPOINT_MAGIC,
+        .computation_result = state.computation_result
+    };
+
+    const uint8_t *src = (const uint8_t *)&checkpoint;
+    for (uint32_t i = 0; i < (uint32_t)sizeof(NvmCheckpoint); i++) {
         nvm_buffer[i] = src[i];
     }
 }
 
-void restore_state(void) {
-    uint8_t *dst = (uint8_t *)&state;
-    for(uint32_t i = 0; i < (uint32_t)sizeof(AppState); i++) {
+bool restore_state(void) {
+    NvmCheckpoint checkpoint = {0};
+    uint8_t *dst = (uint8_t *)&checkpoint;
+    for (uint32_t i = 0; i < (uint32_t)sizeof(NvmCheckpoint); i++) {
         dst[i] = nvm_buffer[i];
     }
+
+    // checkpoint may be corrupted or failed
+    if (checkpoint.magic != CHECKPOINT_MAGIC) {
+        state.computation_result = 0;
+        return false;
+    }
+
+    state.computation_result = checkpoint.computation_result;
+    return true;
 }
 
 uint32_t compute_task(uint32_t input) {
@@ -63,18 +92,25 @@ uint32_t compute_task(uint32_t input) {
 
 void main(void) {
     uart_init();
-    uart_write("C: Intermittent Computing Test Started\n");
+    uart_write("Intermittent Computing Test Started\n");
+
+    if (restore_state()) {
+        uart_write("Restored checkpoint\n");
+    } else {
+        uart_write("No checkpoint found\n");
+    }
 
     for (uint32_t cycle = 0; cycle < 100; cycle++) {
         state.computation_result = compute_task(cycle);
-        
+
         if (cycle % 10 == 0) {
+            uart_write("Starting checkpoint...\n");
             checkpoint_state();
-            uart_write("C: Checkpoint saved\n");
+            uart_write("Checkpoint saved\n");
         }
     }
 
-    uart_write("C: Test completed\n");
+    uart_write("Test completed\n");
 
     while (1);
 }

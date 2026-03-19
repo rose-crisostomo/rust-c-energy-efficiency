@@ -43,4 +43,3 @@ if exist intermittent_c.elf (
 )
 
 cd ..
-pause
