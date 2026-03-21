@@ -47,8 +47,8 @@ def run_simulation(script: str, label: str) -> dict[str, int]:
                 if line is None: # found EOF
                     break
                 line = line.rstrip()
-                if any(k in line for k in ("ERROR", "WARNING", "Machine started", "Machine paused", "METRICS")):
-                    print(f"    [renode] {line}")
+                # if any(k in line for k in ("ERROR", "WARNING", "Machine started", "Machine paused", "METRICS")):
+                #     print(f"    [renode] {line}")
                 m = _METRICS_RE.search(line)
                 if m:
                     metrics = {

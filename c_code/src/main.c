@@ -22,7 +22,7 @@
 #define NOINIT_SECTION
 #endif
 
-static uint8_t nvm_buffer[NVM_SIZE] NOINIT_SECTION;
+static volatile uint8_t nvm_buffer[NVM_SIZE] NOINIT_SECTION;
 
 typedef struct {
     uint32_t computation_result;
@@ -54,31 +54,50 @@ void uart_write(const char *str) {
 }
 
 void checkpoint_state(void) {
-    const NvmCheckpoint checkpoint = {
-        .magic = CHECKPOINT_MAGIC,
-        .computation_result = state.computation_result
-    };
+    const uint32_t magic = CHECKPOINT_MAGIC;
+    const uint32_t result = state.computation_result;
+    uint8_t checkpoint_bytes[sizeof(NvmCheckpoint)] = {0};
 
-    const uint8_t *src = (const uint8_t *)&checkpoint;
+    checkpoint_bytes[0] = (uint8_t)(magic & 0xFFu);
+    checkpoint_bytes[1] = (uint8_t)((magic >> 8) & 0xFFu);
+    checkpoint_bytes[2] = (uint8_t)((magic >> 16) & 0xFFu);
+    checkpoint_bytes[3] = (uint8_t)((magic >> 24) & 0xFFu);
+
+    checkpoint_bytes[4] = (uint8_t)(result & 0xFFu);
+    checkpoint_bytes[5] = (uint8_t)((result >> 8) & 0xFFu);
+    checkpoint_bytes[6] = (uint8_t)((result >> 16) & 0xFFu);
+    checkpoint_bytes[7] = (uint8_t)((result >> 24) & 0xFFu);
+
     for (uint32_t i = 0; i < (uint32_t)sizeof(NvmCheckpoint); i++) {
-        nvm_buffer[i] = src[i];
+        nvm_buffer[i] = checkpoint_bytes[i];
     }
 }
 
 bool restore_state(void) {
-    NvmCheckpoint checkpoint = {0};
-    uint8_t *dst = (uint8_t *)&checkpoint;
+    uint8_t checkpoint_bytes[sizeof(NvmCheckpoint)] = {0};
     for (uint32_t i = 0; i < (uint32_t)sizeof(NvmCheckpoint); i++) {
-        dst[i] = nvm_buffer[i];
+        checkpoint_bytes[i] = nvm_buffer[i];
     }
 
+    const uint32_t magic =
+        ((uint32_t)checkpoint_bytes[0]) |
+        ((uint32_t)checkpoint_bytes[1] << 8) |
+        ((uint32_t)checkpoint_bytes[2] << 16) |
+        ((uint32_t)checkpoint_bytes[3] << 24);
+
+    const uint32_t computation_result =
+        ((uint32_t)checkpoint_bytes[4]) |
+        ((uint32_t)checkpoint_bytes[5] << 8) |
+        ((uint32_t)checkpoint_bytes[6] << 16) |
+        ((uint32_t)checkpoint_bytes[7] << 24);
+
     // checkpoint may be corrupted or failed
-    if (checkpoint.magic != CHECKPOINT_MAGIC) {
+    if (magic != CHECKPOINT_MAGIC) {
         state.computation_result = 0;
         return false;
     }
 
-    state.computation_result = checkpoint.computation_result;
+    state.computation_result = computation_result;
     return true;
 }
 
