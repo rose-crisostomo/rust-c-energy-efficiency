@@ -6,3 +6,4 @@ build/
 *.csv
 .DS_Store
 .vscode/
+renode_scripts/generated/

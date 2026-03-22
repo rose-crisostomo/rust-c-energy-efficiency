@@ -1,10 +1,14 @@
 import csv
+import shutil
 import subprocess
 import time
 import os
 import threading
 import queue
 import io
+import random
+
+overall_start = time.perf_counter()
 
 def _read_pipe(pipe: io.TextIOWrapper, q: queue.Queue[str | None]):
     try:
@@ -43,6 +47,8 @@ def run_simulation(script: str, label: str) -> tuple[int, int, int, int]:
                 # print(f"    [renode] {line}")
                 if "Test Started" in line:
                     reboot_count += 1
+                    # elapsed_so_far = time.perf_counter() - overall_start
+                    # print(f"    [elapsed] {elapsed_so_far:.2f} s since benchmark start")
                 elif "No checkpoint found" in line:
                     no_checkpoint_count += 1
                 elif "Starting checkpoint" in line:
@@ -64,9 +70,39 @@ def run_simulation(script: str, label: str) -> tuple[int, int, int, int]:
 
     return reboot_count, no_checkpoint_count, starting_checkpoint_count, checkpoint_count
 
-os.makedirs("results", exist_ok=True)
+def generate_resc_files(languages: dict[str, str]) -> dict[str, str]:
+    duration_list = [f"00:00:00.{i:06d}" for i in sorted(random.sample(range(1, 1001), 100))]
+    generated_files: dict[str, str] = {}
 
-languages = {"C": "renode_scripts/stm32_c.resc", "Rust": "renode_scripts/stm32_rust.resc"}
+    for lang, path in languages.items():
+        new_path = shutil.copy(path, "renode_scripts/generated/")
+        with open(new_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+
+        if lines and lines[-1].strip() == "start":
+            lines.pop()
+
+        with open(new_path, "w") as f:
+            f.writelines(lines)
+            if lines and not lines[-1].endswith("\n"):
+                f.write("\n")
+
+            for duration in duration_list:
+                f.write(f"emulation RunFor \"{duration}\"\n")
+                f.write(f"{'sysbus.cpu' if lang == 'Rust' else 'machine'} Reset\n")
+
+            f.write("start\n")
+
+        generated_files[lang] = new_path
+
+    return generated_files
+
+
+os.makedirs("results", exist_ok=True)
+os.makedirs("renode_scripts/generated", exist_ok=True)
+
+template_languages = {"C": "renode_scripts/stm32_c.resc", "Rust": "renode_scripts/stm32_rust.resc"}
+languages = generate_resc_files(template_languages)
 results = dict[str, tuple[int, int, int, int]]()
 
 print("=" * 70)
@@ -117,3 +153,6 @@ if results.get("C") and results.get("Rust"):
     print(f"{'No Checkpoints Found':<25} {c[1]:>15} {rs[1]:>15} {pct_no_cp:>7.2f}%")
     print(f"{'Starting Checkpoints':<25} {c[2]:>15} {rs[2]:>15} {pct_start_cp:>7.2f}%")
     print(f"{'Checkpoints Saved':<25} {c[3]:>15} {rs[3]:>15} {pct_cp:>7.2f}%")
+
+elapsed_seconds = time.perf_counter() - overall_start
+print(f"\nTotal elapsed wall time: {elapsed_seconds:.2f} s")
