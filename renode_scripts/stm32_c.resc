@@ -8,75 +8,16 @@ $bin?="C:\Users\crsst\Documents\Dev\rust-c-energy-efficiency\c_code\build\interm
 
 macro reset
 """
-	sysbus LoadELF $bin
+    sysbus LoadELF $bin
 """
 
 runMacro $reset
 
 showAnalyzer sysbus.usart2
 
-sysbus.usart2 AddLineHook "Test completed" "instrs = list(machine.SystemBus.GetCPUs())[0].ExecutedInstructions; vt_us = int(machine.ElapsedVirtualTime.TimeElapsed.Ticks); self.Log(LogLevel.Info, 'METRICS instructions=' + str(instrs) + ' virtual_us=' + str(vt_us)); machine.Pause()"
+sysbus.usart2 AddLineHook "Checkpoint saved" "cpu=list(machine.SystemBus.GetCPUs())[0]; i=int(cpu.ExecutedInstructions); t=int(machine.ElapsedVirtualTime.TimeElapsed.Ticks); self.Log(LogLevel.Info, 'CP_SNAP instructions=%d vt_ticks=%d' % (i,t))"
+
+sysbus.usart2 AddLineHook "Test completed" "cpu=list(machine.SystemBus.GetCPUs())[0]; i=int(cpu.ExecutedInstructions); t=int(machine.ElapsedVirtualTime.TimeElapsed.Ticks); self.Log(LogLevel.Info, 'METRICS instructions=%d vt_ticks=%d' % (i,t)); machine.Pause()"
 
 echo "=== TEST START ==="
-
-emulation RunFor "00:00:00.000534"
-machine Reset
-emulation RunFor "00:00:00.001355"
-machine Reset
-emulation RunFor "00:00:00.000024"
-machine Reset
-emulation RunFor "00:00:00.001512"
-machine Reset
-emulation RunFor "00:00:00.000609"
-machine Reset
-emulation RunFor "00:00:00.000611"
-machine Reset
-emulation RunFor "00:00:00.001885"
-machine Reset
-emulation RunFor "00:00:00.001066"
-machine Reset
-emulation RunFor "00:00:00.000009"
-machine Reset
-emulation RunFor "00:00:00.001066"
-machine Reset
-emulation RunFor "00:00:00.000534"
-machine Reset
-emulation RunFor "00:00:00.001355"
-machine Reset
-emulation RunFor "00:00:00.000024"
-machine Reset
-emulation RunFor "00:00:00.001512"
-machine Reset
-emulation RunFor "00:00:00.000609"
-machine Reset
-emulation RunFor "00:00:00.000611"
-machine Reset
-emulation RunFor "00:00:00.001885"
-machine Reset
-emulation RunFor "00:00:00.001066"
-machine Reset
-emulation RunFor "00:00:00.000009"
-machine Reset
-emulation RunFor "00:00:00.001066"
-machine Reset
-emulation RunFor "00:00:00.000534"
-machine Reset
-emulation RunFor "00:00:00.001355"
-machine Reset
-emulation RunFor "00:00:00.000024"
-machine Reset
-emulation RunFor "00:00:00.001512"
-machine Reset
-emulation RunFor "00:00:00.000609"
-machine Reset
-emulation RunFor "00:00:00.000611"
-machine Reset
-emulation RunFor "00:00:00.001885"
-machine Reset
-emulation RunFor "00:00:00.001066"
-machine Reset
-emulation RunFor "00:00:00.000009"
-machine Reset
-emulation RunFor "00:00:00.001066"
-machine Reset
 start

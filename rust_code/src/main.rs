@@ -32,6 +32,7 @@ struct NvmCheckpoint {
 }
 
 static COMPUTATION_RESULT: AtomicU32 = AtomicU32::new(0);
+static NVM_WRITE_COUNT: AtomicU32 = AtomicU32::new(0);
 
 #[inline(always)]
 fn mmio_read32(addr: *mut u32) -> u32 {
@@ -49,6 +50,7 @@ fn nvm_write_byte(index: usize, value: u8) {
         let nvm_ptr = (*addr_of_mut!(NVM_BUFFER)).as_mut_ptr() as *mut u8;
         core::ptr::write_volatile(nvm_ptr.add(index), value);
     }
+    NVM_WRITE_COUNT.fetch_add(1, Ordering::Relaxed);
 }
 
 #[inline(always)]
@@ -78,8 +80,27 @@ fn uart_write(s: &str) {
     }
 }
 
-// make computation_result observable/atomic so compiler doesn't optimize it away
+fn uart_write_u32(mut val: u32) {
+    if val == 0 {
+        uart_putchar(b'0');
+        return;
+    }
+    let mut buf = [0u8; 10]; // max 10 digits for u32
+    let mut len = 0usize;
+    while val > 0 {
+        buf[len] = (val % 10) as u8 + b'0';
+        val /= 10;
+        len += 1;
+    }
+    // digits were stored least-significant-first; emit in reverse
+    for i in (0..len).rev() {
+        uart_putchar(buf[i]);
+    }
+}
+
 fn checkpoint_state() {
+    NVM_WRITE_COUNT.store(0, Ordering::Relaxed);
+
     let checkpoint = NvmCheckpoint {
         magic: CHECKPOINT_MAGIC,
         computation_result: COMPUTATION_RESULT.load(Ordering::Relaxed),
@@ -92,6 +113,10 @@ fn checkpoint_state() {
     for (i, byte) in checkpoint_bytes.iter().enumerate() {
         nvm_write_byte(i, *byte);
     }
+
+    uart_write("NVM_WRITES=");
+    uart_write_u32(NVM_WRITE_COUNT.load(Ordering::Relaxed));
+    uart_write("\n");
 }
 
 fn restore_state() -> bool {

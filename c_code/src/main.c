@@ -23,6 +23,7 @@
 #endif
 
 static volatile uint8_t nvm_buffer[NVM_SIZE] NOINIT_SECTION;
+static volatile uint32_t nvm_write_count;
 
 typedef struct {
     uint32_t computation_result;
@@ -43,17 +44,42 @@ static void uart_init(void) {
 
 static void uart_putchar(char c) {
     // wait for TXE (SR bit 7) before writing the next byte.
-    while((USART2_SR & (1u << 7)) == 0u) {}
+    while ((USART2_SR & (1u << 7)) == 0u) {}
     USART2_DR = (uint32_t)c;
 }
 
 void uart_write(const char *str) {
-    while(*str != '\0') {
+    while (*str != '\0') {
         uart_putchar(*str++);
     }
 }
 
+static void uart_write_u32(uint32_t val) {
+    if (val == 0u) {
+        uart_putchar('0');
+        return;
+    }
+    char buf[10]; // max 10 digits for uint32_t
+    uint32_t len = 0u;
+    while (val > 0u) {
+        buf[len++] = (char)('0' + (val % 10u));
+        val /= 10u;
+    }
+    // digits stored least-significant-first; emit in reverse
+    while (len > 0u) {
+        uart_putchar(buf[--len]);
+    }
+}
+
+
+static void nvm_write_byte(uint32_t index, uint8_t value) {
+    nvm_buffer[index] = value;
+    nvm_write_count++;
+}
+
 void checkpoint_state(void) {
+    nvm_write_count = 0u;
+
     const uint32_t magic = CHECKPOINT_MAGIC;
     const uint32_t result = state.computation_result;
     uint8_t checkpoint_bytes[sizeof(NvmCheckpoint)] = {0};
@@ -68,14 +94,18 @@ void checkpoint_state(void) {
     checkpoint_bytes[6] = (uint8_t)((result >> 16) & 0xFFu);
     checkpoint_bytes[7] = (uint8_t)((result >> 24) & 0xFFu);
 
-    for (uint32_t i = 0; i < (uint32_t)sizeof(NvmCheckpoint); i++) {
-        nvm_buffer[i] = checkpoint_bytes[i];
+    for (uint32_t i = 0u; i < (uint32_t)sizeof(NvmCheckpoint); i++) {
+        nvm_write_byte(i, checkpoint_bytes[i]);
     }
+
+    uart_write("NVM_WRITES=");
+    uart_write_u32(nvm_write_count);
+    uart_putchar('\n');
 }
 
 bool restore_state(void) {
     uint8_t checkpoint_bytes[sizeof(NvmCheckpoint)] = {0};
-    for (uint32_t i = 0; i < (uint32_t)sizeof(NvmCheckpoint); i++) {
+    for (uint32_t i = 0u; i < (uint32_t)sizeof(NvmCheckpoint); i++) {
         checkpoint_bytes[i] = nvm_buffer[i];
     }
 
@@ -91,9 +121,8 @@ bool restore_state(void) {
         ((uint32_t)checkpoint_bytes[6] << 16) |
         ((uint32_t)checkpoint_bytes[7] << 24);
 
-    // checkpoint may be corrupted or failed
     if (magic != CHECKPOINT_MAGIC) {
-        state.computation_result = 0;
+        state.computation_result = 0u;
         return false;
     }
 
@@ -102,9 +131,9 @@ bool restore_state(void) {
 }
 
 uint32_t compute_task(uint32_t input) {
-    uint32_t result = 0;
-    for (uint32_t i = 0; i < 1000; i++) {
-        result += (input * i) / (i + 1);
+    uint32_t result = 0u;
+    for (uint32_t i = 0u; i < 1000u; i++) {
+        result += (input * i) / (i + 1u);
     }
     return result;
 }
@@ -119,10 +148,10 @@ void main(void) {
         uart_write("No checkpoint found\n");
     }
 
-    for (uint32_t cycle = 0; cycle < 100; cycle++) {
+    for (uint32_t cycle = 0u; cycle < 100u; cycle++) {
         state.computation_result = compute_task(cycle);
 
-        if (cycle % 10 == 0) {
+        if (cycle % 10u == 0u) {
             uart_write("Starting checkpoint...\n");
             checkpoint_state();
             uart_write("Checkpoint saved\n");
