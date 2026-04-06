@@ -1,0 +1,3 @@
+Language,Instructions,Virtual Time us,Est Energy uJ,Reboots,CP Attempts,CP Saved,Success Rate %,Total NVM Writes,Avg Instrs per CP
+C,606369,5413599.8,875.4452,101,136,136,100.0,1088,23532.4
+Rust,502425,5313599.8,725.3761,101,149,148,99.33,1184,22054.04
