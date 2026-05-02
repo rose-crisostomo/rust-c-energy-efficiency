@@ -1,0 +1,226 @@
+using sysbus
+
+mach create "stm32_rust"
+
+machine LoadPlatformDescription @platforms/boards/stm32f4_discovery.repl
+
+$bin?="C:\Users\crsst\Documents\Dev\rust-c-energy-efficiency\rust_code\target\thumbv7em-none-eabihf\release\intermittent_rust"
+
+macro reset
+"""
+    sysbus LoadELF $bin
+"""
+
+runMacro $reset
+
+showAnalyzer sysbus.usart2
+
+sysbus.usart2 AddLineHook "Checkpoint saved" "cpu=list(machine.SystemBus.GetCPUs())[0]; i=int(cpu.ExecutedInstructions); t=int(machine.ElapsedVirtualTime.TimeElapsed.Ticks); self.Log(LogLevel.Info, 'CP_SNAP instructions=%d vt_ticks=%d' % (i,t))"
+
+sysbus.usart2 AddLineHook "Test completed" "cpu=list(machine.SystemBus.GetCPUs())[0]; i=int(cpu.ExecutedInstructions); t=int(machine.ElapsedVirtualTime.TimeElapsed.Ticks); self.Log(LogLevel.Info, 'METRICS instructions=%d vt_ticks=%d' % (i,t)); machine.Pause()"
+
+echo "=== TEST START ==="
+
+
+
+emulation RunFor "00:00:00.000007"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000026"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000028"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000031"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000033"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000045"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000047"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000072"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000081"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000082"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000090"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000095"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000096"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000100"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000104"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000105"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000115"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000128"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000143"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000160"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000164"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000167"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000197"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000204"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000215"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000221"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000224"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000226"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000229"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000234"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000239"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000251"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000271"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000282"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000285"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000297"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000301"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000345"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000349"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000353"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000364"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000368"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000371"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000374"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000380"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000388"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000390"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000430"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000433"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000460"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000465"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000471"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000518"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000550"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000559"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000566"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000575"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000592"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000604"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000605"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000617"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000619"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000634"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000644"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000651"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000655"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000666"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000678"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000687"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000693"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000715"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000719"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000722"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000734"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000748"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000755"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000759"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000760"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000778"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000782"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000792"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000826"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000827"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000829"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000850"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000855"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000868"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000876"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000883"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000888"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000891"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000907"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000914"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000948"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000955"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000965"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000979"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000984"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000987"
+sysbus.cpu Reset
+emulation RunFor "00:00:00.000991"
+sysbus.cpu Reset
+start

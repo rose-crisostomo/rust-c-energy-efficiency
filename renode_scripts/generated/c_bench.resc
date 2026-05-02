@@ -1,0 +1,226 @@
+using sysbus
+
+mach create "stm32_c"
+
+machine LoadPlatformDescription @platforms/boards/stm32f4_discovery.repl
+
+$bin?="C:\Users\crsst\Documents\Dev\rust-c-energy-efficiency\c_code\build\intermittent_c.elf"
+
+macro reset
+"""
+    sysbus LoadELF $bin
+"""
+
+runMacro $reset
+
+showAnalyzer sysbus.usart2
+
+sysbus.usart2 AddLineHook "Checkpoint saved" "cpu=list(machine.SystemBus.GetCPUs())[0]; i=int(cpu.ExecutedInstructions); t=int(machine.ElapsedVirtualTime.TimeElapsed.Ticks); self.Log(LogLevel.Info, 'CP_SNAP instructions=%d vt_ticks=%d' % (i,t))"
+
+sysbus.usart2 AddLineHook "Test completed" "cpu=list(machine.SystemBus.GetCPUs())[0]; i=int(cpu.ExecutedInstructions); t=int(machine.ElapsedVirtualTime.TimeElapsed.Ticks); self.Log(LogLevel.Info, 'METRICS instructions=%d vt_ticks=%d' % (i,t)); machine.Pause()"
+
+echo "=== TEST START ==="
+
+
+
+emulation RunFor "00:00:00.000007"
+machine Reset
+emulation RunFor "00:00:00.000026"
+machine Reset
+emulation RunFor "00:00:00.000028"
+machine Reset
+emulation RunFor "00:00:00.000031"
+machine Reset
+emulation RunFor "00:00:00.000033"
+machine Reset
+emulation RunFor "00:00:00.000045"
+machine Reset
+emulation RunFor "00:00:00.000047"
+machine Reset
+emulation RunFor "00:00:00.000072"
+machine Reset
+emulation RunFor "00:00:00.000081"
+machine Reset
+emulation RunFor "00:00:00.000082"
+machine Reset
+emulation RunFor "00:00:00.000090"
+machine Reset
+emulation RunFor "00:00:00.000095"
+machine Reset
+emulation RunFor "00:00:00.000096"
+machine Reset
+emulation RunFor "00:00:00.000100"
+machine Reset
+emulation RunFor "00:00:00.000104"
+machine Reset
+emulation RunFor "00:00:00.000105"
+machine Reset
+emulation RunFor "00:00:00.000115"
+machine Reset
+emulation RunFor "00:00:00.000128"
+machine Reset
+emulation RunFor "00:00:00.000143"
+machine Reset
+emulation RunFor "00:00:00.000160"
+machine Reset
+emulation RunFor "00:00:00.000164"
+machine Reset
+emulation RunFor "00:00:00.000167"
+machine Reset
+emulation RunFor "00:00:00.000197"
+machine Reset
+emulation RunFor "00:00:00.000204"
+machine Reset
+emulation RunFor "00:00:00.000215"
+machine Reset
+emulation RunFor "00:00:00.000221"
+machine Reset
+emulation RunFor "00:00:00.000224"
+machine Reset
+emulation RunFor "00:00:00.000226"
+machine Reset
+emulation RunFor "00:00:00.000229"
+machine Reset
+emulation RunFor "00:00:00.000234"
+machine Reset
+emulation RunFor "00:00:00.000239"
+machine Reset
+emulation RunFor "00:00:00.000251"
+machine Reset
+emulation RunFor "00:00:00.000271"
+machine Reset
+emulation RunFor "00:00:00.000282"
+machine Reset
+emulation RunFor "00:00:00.000285"
+machine Reset
+emulation RunFor "00:00:00.000297"
+machine Reset
+emulation RunFor "00:00:00.000301"
+machine Reset
+emulation RunFor "00:00:00.000345"
+machine Reset
+emulation RunFor "00:00:00.000349"
+machine Reset
+emulation RunFor "00:00:00.000353"
+machine Reset
+emulation RunFor "00:00:00.000364"
+machine Reset
+emulation RunFor "00:00:00.000368"
+machine Reset
+emulation RunFor "00:00:00.000371"
+machine Reset
+emulation RunFor "00:00:00.000374"
+machine Reset
+emulation RunFor "00:00:00.000380"
+machine Reset
+emulation RunFor "00:00:00.000388"
+machine Reset
+emulation RunFor "00:00:00.000390"
+machine Reset
+emulation RunFor "00:00:00.000430"
+machine Reset
+emulation RunFor "00:00:00.000433"
+machine Reset
+emulation RunFor "00:00:00.000460"
+machine Reset
+emulation RunFor "00:00:00.000465"
+machine Reset
+emulation RunFor "00:00:00.000471"
+machine Reset
+emulation RunFor "00:00:00.000518"
+machine Reset
+emulation RunFor "00:00:00.000550"
+machine Reset
+emulation RunFor "00:00:00.000559"
+machine Reset
+emulation RunFor "00:00:00.000566"
+machine Reset
+emulation RunFor "00:00:00.000575"
+machine Reset
+emulation RunFor "00:00:00.000592"
+machine Reset
+emulation RunFor "00:00:00.000604"
+machine Reset
+emulation RunFor "00:00:00.000605"
+machine Reset
+emulation RunFor "00:00:00.000617"
+machine Reset
+emulation RunFor "00:00:00.000619"
+machine Reset
+emulation RunFor "00:00:00.000634"
+machine Reset
+emulation RunFor "00:00:00.000644"
+machine Reset
+emulation RunFor "00:00:00.000651"
+machine Reset
+emulation RunFor "00:00:00.000655"
+machine Reset
+emulation RunFor "00:00:00.000666"
+machine Reset
+emulation RunFor "00:00:00.000678"
+machine Reset
+emulation RunFor "00:00:00.000687"
+machine Reset
+emulation RunFor "00:00:00.000693"
+machine Reset
+emulation RunFor "00:00:00.000715"
+machine Reset
+emulation RunFor "00:00:00.000719"
+machine Reset
+emulation RunFor "00:00:00.000722"
+machine Reset
+emulation RunFor "00:00:00.000734"
+machine Reset
+emulation RunFor "00:00:00.000748"
+machine Reset
+emulation RunFor "00:00:00.000755"
+machine Reset
+emulation RunFor "00:00:00.000759"
+machine Reset
+emulation RunFor "00:00:00.000760"
+machine Reset
+emulation RunFor "00:00:00.000778"
+machine Reset
+emulation RunFor "00:00:00.000782"
+machine Reset
+emulation RunFor "00:00:00.000792"
+machine Reset
+emulation RunFor "00:00:00.000826"
+machine Reset
+emulation RunFor "00:00:00.000827"
+machine Reset
+emulation RunFor "00:00:00.000829"
+machine Reset
+emulation RunFor "00:00:00.000850"
+machine Reset
+emulation RunFor "00:00:00.000855"
+machine Reset
+emulation RunFor "00:00:00.000868"
+machine Reset
+emulation RunFor "00:00:00.000876"
+machine Reset
+emulation RunFor "00:00:00.000883"
+machine Reset
+emulation RunFor "00:00:00.000888"
+machine Reset
+emulation RunFor "00:00:00.000891"
+machine Reset
+emulation RunFor "00:00:00.000907"
+machine Reset
+emulation RunFor "00:00:00.000914"
+machine Reset
+emulation RunFor "00:00:00.000948"
+machine Reset
+emulation RunFor "00:00:00.000955"
+machine Reset
+emulation RunFor "00:00:00.000965"
+machine Reset
+emulation RunFor "00:00:00.000979"
+machine Reset
+emulation RunFor "00:00:00.000984"
+machine Reset
+emulation RunFor "00:00:00.000987"
+machine Reset
+emulation RunFor "00:00:00.000991"
+machine Reset
+start
